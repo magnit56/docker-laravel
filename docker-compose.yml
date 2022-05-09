@@ -1,0 +1,67 @@
+version: "3.3"
+
+services:
+    nginx:
+        build:
+            context: .
+            dockerfile: docker/Nginx.Dockerfile
+        container_name: nginx
+        ports:
+            - 8080:80
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - myNetwork
+        depends_on:
+            - fpm
+
+    fpm:
+        build:
+            context: .
+            dockerfile: docker/Fpm.Dockerfile
+        container_name: fpm
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - myNetwork
+        depends_on:
+            - mysql
+
+    mysql:
+        image: mysql:5.7
+        container_name: mysql
+        ports:
+            - 33061:3306
+        volumes:
+            - dbdata:/var/lib/mysql/
+        environment:
+            - MYSQL_ROOT_PASSWORD=secret_root_password
+            - MYSQL_DATABASE=your_database
+            - MYSQL_USER=your_user
+            - MYSQL_PASSWORD=your_password
+        networks:
+            - myNetwork
+
+    redis:
+        image: redis:7.0.0-alpine
+        container_name: redis
+        networks:
+            - myNetwork
+
+#    node:
+#        build:
+#            context: .
+#            dockerfile: docker/Node.Dockerfile
+#        container_name: node
+#        volumes:
+#            - ./:/var/www/html
+#        networks:
+#            - myNetwork
+
+volumes:
+    dbdata:
+        driver: local
+
+networks:
+  myNetwork:
+    driver: bridge
